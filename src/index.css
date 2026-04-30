@@ -283,5 +283,30 @@ body {
 .auth-submit { width: 100%; background: var(--primary); color: white; border: none; border-radius: 12px; padding: 1rem; font-weight: 600; margin-top: 1.5rem; cursor: pointer; transition: 0.2s;}
 .auth-submit:hover { background: var(--primary-dark); }
 .auth-tabs { display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--surface-border); padding-bottom: 0.5rem;}
-.auth-tab { cursor: pointer; color: var(--text-secondary); font-weight: 500; transition: 0.2s; }
+.auth-tab { cursor: pointer; color: var(--text-secondary); font-weight: 500; transition: 0.2s; padding: 0.25rem 0; }
 .auth-tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+
+/* ─── Focus Visibility (Keyboard Navigation) ─────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ─── Reduced Motion (WCAG 2.1 AA) ──────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── High Contrast Mode Support ────────────────────────────────────────── */
+@media (forced-colors: active) {
+  .glass-card { border: 2px solid ButtonText; }
+  .action-btn, .send-btn, .mic-btn { border: 1px solid ButtonText; }
+}

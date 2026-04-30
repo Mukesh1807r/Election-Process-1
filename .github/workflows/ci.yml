@@ -1,0 +1,34 @@
+name: CI — Test, Lint & Security
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Run Tests & Security Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies (clean install)
+        run: npm ci
+
+      - name: Run unit, red team & integration tests
+        run: npm test
+
+      - name: Security audit (fail on high/critical)
+        run: npm audit --audit-level=high
+
+      - name: Build production bundle (validate no build errors)
+        run: npm run build

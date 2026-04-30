@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import { Send, Mic, MapPin, ArrowRight, Activity, BookOpen, Users, Sun, Moon, Settings, LogOut } from 'lucide-react';
+import { Send, Mic, MapPin, ArrowRight, Activity, BookOpen, Users, Sun, Moon, Settings, LogOut, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { generateAIResponse } from './utils/aiEngine';
+import { speak, responseToSpeech } from './utils/ttsService';
+import { logInfo, logError } from './utils/cloudLogger';
 import ProgressDashboard from './components/ProgressDashboard';
 
 // Lazy Load Modals for Performance Optimization
@@ -95,25 +97,33 @@ export default function App() {
 
     setMessages(prev => [...prev, { id: Date.now(), sender: 'user', text }]);
     setInputValue('');
+    logInfo('User message sent', { userType: userContext.userType });
 
     // Simulate thinking state to prevent UI blocking (Efficiency)
     setTimeout(async () => {
-      const aiResponse = await generateAIResponse(text, userContext);
-      setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', data: aiResponse }]);
-      
-      if (text.includes('Yes, I meet these criteria')) {
-        setUserContext(prev => ({
-          ...prev,
-          progress: {
-            ...prev.progress,
-            completed: 2,
-            steps: [
-              { name: 'Eligibility Checked', status: 'completed' },
-              { name: 'Registered', status: 'completed' },
-              { name: 'Voting Pending', status: 'pending' }
-            ]
-          }
-        }));
+      try {
+        const aiResponse = await generateAIResponse(text, userContext);
+        setMessages(prev => [...prev, { id: Date.now() + 1, sender: 'ai', data: aiResponse }]);
+
+        // Auto-speak AI response for WCAG 2.1 AA accessibility (visual impairment support)
+        speak(responseToSpeech(aiResponse));
+
+        if (text.includes('Yes, I meet these criteria')) {
+          setUserContext(prev => ({
+            ...prev,
+            progress: {
+              ...prev.progress,
+              completed: 2,
+              steps: [
+                { name: 'Eligibility Checked', status: 'completed' },
+                { name: 'Registered', status: 'completed' },
+                { name: 'Voting Pending', status: 'pending' }
+              ]
+            }
+          }));
+        }
+      } catch (err) {
+        logError('AI response generation failed', { error: err.message });
       }
     }, 500);
   };
@@ -148,12 +158,22 @@ export default function App() {
     return (
       <article className="message-content structured-response">
         {data.title && (
-          <header className="structured-title">
-            {data.type === 'correction' ? <Activity size={20} color="var(--warning)" aria-hidden="true" /> : 
-             data.type === 'map' ? <MapPin size={20} color="var(--info)" aria-hidden="true" /> :
-             data.type === 'candidates' ? <Users size={20} color="var(--info)" aria-hidden="true" /> :
-             <BookOpen size={20} aria-hidden="true" />}
-            {data.title}
+          <header className="structured-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {data.type === 'correction' ? <Activity size={20} color="var(--warning)" aria-hidden="true" /> : 
+               data.type === 'map' ? <MapPin size={20} color="var(--info)" aria-hidden="true" /> :
+               data.type === 'candidates' ? <Users size={20} color="var(--info)" aria-hidden="true" /> :
+               <BookOpen size={20} aria-hidden="true" />}
+              {data.title}
+            </span>
+            <button
+              onClick={() => speak(responseToSpeech(data))}
+              aria-label="Read response aloud"
+              title="Read aloud (Accessibility)"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '4px' }}
+            >
+              <Volume2 size={16} aria-hidden="true" />
+            </button>
           </header>
         )}
         

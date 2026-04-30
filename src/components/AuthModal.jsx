@@ -23,15 +23,18 @@ export default function AuthModal({ onLogin }) {
         className="glass-card modal-card"
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
       >
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <h1 style={{ fontSize: '2rem', color: 'var(--primary)', fontWeight: 'bold' }}>Election AI</h1>
+          <h1 id="auth-modal-title" style={{ fontSize: '2rem', color: 'var(--primary)', fontWeight: 'bold' }}>Election AI</h1>
           <p style={{ color: 'var(--text-secondary)' }}>Secure Portal</p>
         </div>
 
-        <div className="auth-tabs">
-          <div className={`auth-tab ${authMode === 'login' ? 'active' : ''}`} onClick={() => setAuthMode('login')}>Log In</div>
-          <div className={`auth-tab ${authMode === 'signup' ? 'active' : ''}`} onClick={() => setAuthMode('signup')}>Sign Up</div>
+        <div className="auth-tabs" role="tablist">
+          <button role="tab" aria-selected={authMode === 'login'} className={`auth-tab ${authMode === 'login' ? 'active' : ''}`} onClick={() => setAuthMode('login')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}>Log In</button>
+          <button role="tab" aria-selected={authMode === 'signup'} className={`auth-tab ${authMode === 'signup' ? 'active' : ''}`} onClick={() => setAuthMode('signup')} style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'inherit' }}>Sign Up</button>
         </div>
 
         <form onSubmit={handleSubmit}>

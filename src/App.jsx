@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Send, Mic, MapPin, ArrowRight, Activity, BookOpen, Users, Sun, Moon, Settings, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { generateAIResponse } from './utils/aiEngine';
-import AuthModal from './components/AuthModal';
-import ProfileModal from './components/ProfileModal';
 import ProgressDashboard from './components/ProgressDashboard';
+
+// Lazy Load Modals for Performance Optimization
+const AuthModal = React.lazy(() => import('./components/AuthModal'));
+const ProfileModal = React.lazy(() => import('./components/ProfileModal'));
 
 export default function App() {
   // Theme State
@@ -144,41 +146,41 @@ export default function App() {
 
     const { data } = msg;
     return (
-      <div className="message-content structured-response">
+      <article className="message-content structured-response">
         {data.title && (
-          <div className="structured-title">
-            {data.type === 'correction' ? <Activity size={20} color="var(--warning)" /> : 
-             data.type === 'map' ? <MapPin size={20} color="var(--info)" /> :
-             data.type === 'candidates' ? <Users size={20} color="var(--info)" /> :
-             <BookOpen size={20} />}
+          <header className="structured-title">
+            {data.type === 'correction' ? <Activity size={20} color="var(--warning)" aria-hidden="true" /> : 
+             data.type === 'map' ? <MapPin size={20} color="var(--info)" aria-hidden="true" /> :
+             data.type === 'candidates' ? <Users size={20} color="var(--info)" aria-hidden="true" /> :
+             <BookOpen size={20} aria-hidden="true" />}
             {data.title}
-          </div>
+          </header>
         )}
         
         {data.flow && (
-          <div className="structured-flow">
+          <nav className="structured-flow" aria-label="Process Flow">
             {data.flow.map((step, idx) => (
               <React.Fragment key={idx}>
                 <span>{step}</span>
-                {idx < data.flow.length - 1 && <ArrowRight size={14} color="var(--text-secondary)" />}
+                {idx < data.flow.length - 1 && <ArrowRight size={14} color="var(--text-secondary)" aria-hidden="true" />}
               </React.Fragment>
             ))}
-          </div>
+          </nav>
         )}
 
         {data.content && data.content.map((text, idx) => <p key={idx}>{text}</p>)}
 
         {data.type === 'map' && (
           <div style={{ width: '100%', height: '250px', borderRadius: '12px', overflow: 'hidden', marginTop: '10px' }}>
-            <iframe width="100%" height="100%" frameBorder="0" src="https://maps.google.com/maps?q=polling+booth+near+me&output=embed" title="Google Maps" allowFullScreen></iframe>
+            <iframe width="100%" height="100%" frameBorder="0" src="https://maps.google.com/maps?q=polling+booth+near+me&output=embed" title="Google Maps Polling Booth Location" allowFullScreen></iframe>
           </div>
         )}
 
         {data.type === 'candidates' && data.candidates && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '10px' }} role="list">
             {data.candidates.map((c, idx) => (
-              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--input-bg)', padding: '10px', borderRadius: '8px' }}>
-                <img src={c.image} alt={c.name} style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--input-bg)', padding: '10px', borderRadius: '8px' }} role="listitem">
+                <img src={c.image} alt={`Photo of candidate ${c.name}`} style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
                 <div>
                   <div style={{ fontWeight: 'bold' }}>{c.name}</div>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{c.party}</div>
@@ -190,7 +192,7 @@ export default function App() {
 
         {data.list && (
           <ul className="structured-list">
-            {data.list.map((item, idx) => <li key={idx}><span>✔</span> {item}</li>)}
+            {data.list.map((item, idx) => <li key={idx}><span aria-hidden="true">✔</span> {item}</li>)}
           </ul>
         )}
 
@@ -203,62 +205,67 @@ export default function App() {
             ))}
           </div>
         )}
-      </div>
+      </article>
     );
   };
 
   if (!isLoggedIn) {
     return (
-      <>
+      <main>
         <button 
           style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 1000 }} 
           className="icon-btn" 
           onClick={() => setTheme(theme === 'dark-mode' ? 'light-mode' : 'dark-mode')}
+          aria-label="Toggle Theme"
         >
           {theme === 'dark-mode' ? <Sun size={20} /> : <Moon size={20} />}
         </button>
-        <AuthModal onLogin={handleLogin} />
-      </>
+        <Suspense fallback={<div style={{display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center'}}>Loading Portal...</div>}>
+          <AuthModal onLogin={handleLogin} />
+        </Suspense>
+      </main>
     );
   }
 
   return (
     <>
-      {showProfileModal && <ProfileModal userContext={userContext} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
+      <Suspense fallback={null}>
+        {showProfileModal && <ProfileModal userContext={userContext} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
+      </Suspense>
       
       {/* Sidebar Area */}
-      <div className="sidebar">
+      <aside className="sidebar" aria-label="Dashboard Sidebar">
         <div className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-          <div className="header">
+          <header className="header">
             <h1>Election AI</h1>
             <div className="header-controls">
-              <button className="icon-btn" onClick={() => setTheme(theme === 'dark-mode' ? 'light-mode' : 'dark-mode')} title="Toggle Theme">
+              <button className="icon-btn" onClick={() => setTheme(theme === 'dark-mode' ? 'light-mode' : 'dark-mode')} aria-label="Toggle Theme" title="Toggle Theme">
                 {theme === 'dark-mode' ? <Sun size={18} /> : <Moon size={18} />}
               </button>
-              <button className="icon-btn" onClick={() => setShowProfileModal(true)} title="Edit Profile">
+              <button className="icon-btn" onClick={() => setShowProfileModal(true)} aria-label="Edit Profile" title="Edit Profile">
                 <Settings size={18} />
               </button>
-              <button className="icon-btn" onClick={() => setIsLoggedIn(false)} title="Logout">
+              <button className="icon-btn" onClick={() => setIsLoggedIn(false)} aria-label="Logout" title="Logout">
                 <LogOut size={18} />
               </button>
             </div>
-          </div>
+          </header>
           
           <div id="google_translate_element" style={{ background: 'var(--input-bg)', borderRadius: '8px', padding: '5px' }}></div>
 
-          <div className="live-status">
-            <div className="status-dot active"></div>
+          <div className="live-status" role="status" aria-live="polite">
+            <div className="status-dot active" aria-hidden="true"></div>
             Live: Campaign Active
           </div>
 
           <ProgressDashboard userContext={userContext} />
         </div>
-      </div>
+      </aside>
 
       {/* Main Chat Area */}
-      <div className="main-content">
-        <div className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div className="chat-container">
+      <main className="main-content">
+        <section className="glass-card" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div className="chat-container" aria-live="polite" aria-atomic="false">
             <AnimatePresence>
               {messages.map((msg) => (
                 <motion.div 
@@ -275,8 +282,8 @@ export default function App() {
           </div>
 
           <div className="input-area">
-            <button className={`mic-btn ${isRecording ? 'recording' : ''}`} onClick={toggleRecording} title="Voice Command">
-              <Mic size={20} />
+            <button className={`mic-btn ${isRecording ? 'recording' : ''}`} onClick={toggleRecording} aria-label={isRecording ? "Stop voice command" : "Start voice command"} title="Voice Command">
+              <Mic size={20} aria-hidden="true" />
             </button>
             <input 
               type="text" 
@@ -285,13 +292,14 @@ export default function App() {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+              aria-label="Chat Input"
             />
-            <button className="send-btn" onClick={handleSend} title="Send Message">
-              <Send size={20} />
+            <button className="send-btn" onClick={handleSend} aria-label="Send Message" title="Send Message">
+              <Send size={20} aria-hidden="true" />
             </button>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </>
   );
 }

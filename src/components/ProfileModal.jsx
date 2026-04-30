@@ -17,8 +17,11 @@ export default function ProfileModal({ userContext, onClose, onUpdate }) {
         onClick={e => e.stopPropagation()}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-title"
       >
-        <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Edit Profile</h2>
+        <h2 id="profile-modal-title" style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Edit Profile</h2>
         <form onSubmit={handleSave}>
           <div>
             <label style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Display Name</label>
